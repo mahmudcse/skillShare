@@ -101,6 +101,25 @@ class MyModel extends CI_Model {
 
     }
 
+    public function updateOffer($offerId = null){
+        $data = array(
+                'title' => $this->input->post('title'),
+                'description' => $this->input->post('description'),
+                'validTill' => $this->input->post('validTill')
+        );
+
+        $userId = $this->input->get_request_header('User-ID', TRUE);
+        $this->db->where('id', $offerId);
+        $this->db->where('userId', $userId);
+        $update = $this->db->update('offers', $data);
+
+        if($update){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
     public function updateUserData(){
 
         $data = array(
@@ -122,6 +141,38 @@ class MyModel extends CI_Model {
             return false;
         }
 
+    }
+
+    public function myOffers(){
+
+            $this->db->select('o.id, o.title, o.description, o.createdAt, o.validTill, o.userId');
+            $this->db->from('offers o');
+            $this->db->where('o.userId', $this->input->get_request_header('User-ID', TRUE));
+            $myOffers = $this->db->get()->result_array();
+            return $myOffers;
+    }
+
+    public function allOffers($cityId = null){
+
+            $this->db->select('o.id,
+                                o.title,
+                                o.description,
+                                o.validTill,
+                                u.contact,
+                                u.address');
+            $this->db->from('offers o');
+            $this->db->join('users u', "u.id = o.userId AND u.city = $cityId", 'INNER');
+            $this->db->where('o.validTill >', date('Y-m-d H:i:s'));
+            $allOffers = $this->db->get()->result_array();
+            return $allOffers;
+    }    
+
+    public function offerDetails($offerId = null){
+        $this->db->select('*');
+        $this->db->from('offers o');
+        $this->db->where('o.id', $offerId);
+        $offerDetails = $this->db->get()->result_array();
+        return $offerDetails;
     }
 
     public function createOffers(){
